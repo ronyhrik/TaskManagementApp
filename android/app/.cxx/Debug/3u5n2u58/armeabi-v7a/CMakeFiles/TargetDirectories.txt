@@ -1,0 +1,9 @@
+/Users/user/Documents/Assessment/TaskManagementApp/android/app/.cxx/Debug/3u5n2u58/armeabi-v7a/CMakeFiles/appmodules.dir
+/Users/user/Documents/Assessment/TaskManagementApp/android/app/.cxx/Debug/3u5n2u58/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/user/Documents/Assessment/TaskManagementApp/android/app/.cxx/Debug/3u5n2u58/armeabi-v7a/CMakeFiles/rebuild_cache.dir
+/Users/user/Documents/Assessment/TaskManagementApp/android/app/.cxx/Debug/3u5n2u58/armeabi-v7a/safeareacontext_autolinked_build/CMakeFiles/react_codegen_safeareacontext.dir
+/Users/user/Documents/Assessment/TaskManagementApp/android/app/.cxx/Debug/3u5n2u58/armeabi-v7a/safeareacontext_autolinked_build/CMakeFiles/edit_cache.dir
+/Users/user/Documents/Assessment/TaskManagementApp/android/app/.cxx/Debug/3u5n2u58/armeabi-v7a/safeareacontext_autolinked_build/CMakeFiles/rebuild_cache.dir
+/Users/user/Documents/Assessment/TaskManagementApp/android/app/.cxx/Debug/3u5n2u58/armeabi-v7a/rnscreens_autolinked_build/CMakeFiles/react_codegen_rnscreens.dir
+/Users/user/Documents/Assessment/TaskManagementApp/android/app/.cxx/Debug/3u5n2u58/armeabi-v7a/rnscreens_autolinked_build/CMakeFiles/edit_cache.dir
+/Users/user/Documents/Assessment/TaskManagementApp/android/app/.cxx/Debug/3u5n2u58/armeabi-v7a/rnscreens_autolinked_build/CMakeFiles/rebuild_cache.dir

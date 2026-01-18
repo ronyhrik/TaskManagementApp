@@ -1,0 +1,55 @@
+{
+  "buildFiles": [
+    "/Users/user/Documents/Assessment/TaskManagementApp/node_modules/react-native-safe-area-context/android/src/main/jni/CMakeLists.txt",
+    "/Users/user/Documents/Assessment/TaskManagementApp/node_modules/react-native-screens/android/src/main/jni/CMakeLists.txt",
+    "/Users/user/Documents/Assessment/TaskManagementApp/node_modules/react-native/ReactAndroid/cmake-utils/default-app-setup/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/Users/user/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+      "-C",
+      "/Users/user/Documents/Assessment/TaskManagementApp/android/app/.cxx/Debug/3u5n2u58/x86",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/Users/user/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+    "-C",
+    "/Users/user/Documents/Assessment/TaskManagementApp/android/app/.cxx/Debug/3u5n2u58/x86",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "react_codegen_safeareacontext::@7984cd80db47aa7b952a": {
+      "artifactName": "react_codegen_safeareacontext",
+      "abi": "x86",
+      "output": "/Users/user/Documents/Assessment/TaskManagementApp/android/app/build/intermediates/cxx/Debug/3u5n2u58/obj/x86/libreact_codegen_safeareacontext.so",
+      "runtimeFiles": [
+        "/Users/user/.gradle/caches/9.0.0/transforms/01a623575326ca1fe384d79dd78b504d/transformed/fbjni-0.7.0/prefab/modules/fbjni/libs/android.x86/libfbjni.so",
+        "/Users/user/.gradle/caches/9.0.0/transforms/ba06fd6a461ce770e52e46ef8db1c1a2/transformed/react-android-0.83.1-debug/prefab/modules/jsi/libs/android.x86/libjsi.so",
+        "/Users/user/.gradle/caches/9.0.0/transforms/ba06fd6a461ce770e52e46ef8db1c1a2/transformed/react-android-0.83.1-debug/prefab/modules/reactnative/libs/android.x86/libreactnative.so"
+      ]
+    },
+    "react_codegen_rnscreens::@25bcbd507e98d3a854ad": {
+      "artifactName": "react_codegen_rnscreens",
+      "abi": "x86",
+      "output": "/Users/user/Documents/Assessment/TaskManagementApp/android/app/build/intermediates/cxx/Debug/3u5n2u58/obj/x86/libreact_codegen_rnscreens.so",
+      "runtimeFiles": [
+        "/Users/user/.gradle/caches/9.0.0/transforms/ba06fd6a461ce770e52e46ef8db1c1a2/transformed/react-android-0.83.1-debug/prefab/modules/reactnative/libs/android.x86/libreactnative.so",
+        "/Users/user/.gradle/caches/9.0.0/transforms/ba06fd6a461ce770e52e46ef8db1c1a2/transformed/react-android-0.83.1-debug/prefab/modules/jsi/libs/android.x86/libjsi.so",
+        "/Users/user/.gradle/caches/9.0.0/transforms/01a623575326ca1fe384d79dd78b504d/transformed/fbjni-0.7.0/prefab/modules/fbjni/libs/android.x86/libfbjni.so"
+      ]
+    },
+    "appmodules::@6890427a1f51a3e7e1df": {
+      "artifactName": "appmodules",
+      "abi": "x86",
+      "output": "/Users/user/Documents/Assessment/TaskManagementApp/android/app/build/intermediates/cxx/Debug/3u5n2u58/obj/x86/libappmodules.so",
+      "runtimeFiles": [
+        "/Users/user/Documents/Assessment/TaskManagementApp/android/app/build/intermediates/cxx/Debug/3u5n2u58/obj/x86/libreact_codegen_safeareacontext.so",
+        "/Users/user/Documents/Assessment/TaskManagementApp/android/app/build/intermediates/cxx/Debug/3u5n2u58/obj/x86/libreact_codegen_rnscreens.so",
+        "/Users/user/.gradle/caches/9.0.0/transforms/01a623575326ca1fe384d79dd78b504d/transformed/fbjni-0.7.0/prefab/modules/fbjni/libs/android.x86/libfbjni.so",
+        "/Users/user/.gradle/caches/9.0.0/transforms/ba06fd6a461ce770e52e46ef8db1c1a2/transformed/react-android-0.83.1-debug/prefab/modules/jsi/libs/android.x86/libjsi.so",
+        "/Users/user/.gradle/caches/9.0.0/transforms/ba06fd6a461ce770e52e46ef8db1c1a2/transformed/react-android-0.83.1-debug/prefab/modules/reactnative/libs/android.x86/libreactnative.so"
+      ]
+    }
+  }
+}

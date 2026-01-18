@@ -1,0 +1,1 @@
+/Users/user/Documents/Assessment/TaskManagementApp/android/app/build/intermediates/cxx/Debug/3u5n2u58/obj/arm64-v8a
