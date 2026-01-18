@@ -21,10 +21,10 @@ export const initializeFirebase = async (): Promise<void> => {
 
   initPromise = (async () => {
     try {
-      // 1️⃣ Validate environment variables
+
       validateEnv();
 
-      // 2️⃣ Firebase config from env
+      // Firebase config from env
       const firebaseConfig = {
         apiKey: ENV.FIREBASE_API_KEY,
         authDomain: ENV.FIREBASE_AUTH_DOMAIN,
@@ -34,7 +34,7 @@ export const initializeFirebase = async (): Promise<void> => {
         appId: ENV.FIREBASE_APP_ID,
       };
 
-      // 3️⃣ Initialize app if not already
+      //Initialize app if not already
       const existingApps = getApps();
       if (existingApps.length === 0) {
         app = initializeApp(firebaseConfig);
@@ -42,10 +42,10 @@ export const initializeFirebase = async (): Promise<void> => {
         app = existingApps[0];
       }
 
-      // 4️⃣ Initialize Auth FIRST (before Firestore)
+      // Initialize Auth FIRST (before Firestore)
       firebaseAuth = getAuth(app);
 
-      // 5️⃣ Initialize Firestore AFTER Auth is ready
+      // Initialize Firestore AFTER Auth is ready
       try {
         firestoreDB = initializeFirestore(app, {
           experimentalForceLongPolling: true,
@@ -56,10 +56,10 @@ export const initializeFirebase = async (): Promise<void> => {
       }
 
       if (ENV.ENABLE_LOGS) {
-        console.log("✅ Firebase initialized successfully");
+        console.log("Firebase initialized successfully");
       }
     } catch (error) {
-      console.error("❌ Firebase initialization error:", error);
+      console.error("Firebase initialization error:", error);
       initPromise = null; // Reset so next call tries again
       throw error;
     }

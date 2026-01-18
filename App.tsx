@@ -20,41 +20,30 @@ export default function App() {
   useEffect(() => {
     const setupApp = async () => {
       try {
-        // 0️⃣ Initialize Firebase first
         await initializeFirebase();
-
-        // 1️⃣ Init local DB
         initDB();
-
-        // 2️⃣ Init notifications
         await initNotifications();
-
-        // 3️⃣ Listen to Firebase auth changes (persist session)
         const unsubscribeAuth = subscribeToAuthChanges((user) => {
-          store.dispatch(setUser(user));
-          // Sync tasks automatically when user is logged in
           if (user) {
+            store.dispatch(setUser(user));
             syncTasks(user.uid);
+          } else {
+            store.dispatch(setUser(null));
           }
         });
-
-        // 4️⃣ Start network listener
         startNetworkListener(() => {
           const user = store.getState().auth.user;
           if (user) {
             syncTasks(user.uid);
           }
         });
-
         setIsInitialized(true);
-
-        // 5️⃣ Cleanup on unmount
         return () => {
-          unsubscribeAuth();       // stop listening auth
-          stopNetworkListener();   // stop network listener
+          unsubscribeAuth();
+          stopNetworkListener();
         };
       } catch (error) {
-        console.error("App initialization error:", error);
+        console.error("❌ [APP] App initialization error:", error);
         setInitError(error instanceof Error ? error.message : "Unknown error");
       }
     };

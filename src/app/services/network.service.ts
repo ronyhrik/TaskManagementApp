@@ -2,9 +2,9 @@ import NetInfo from "@react-native-community/netinfo";
 
 let unsubscribe: (() => void) | null = null;
 
-/**
- * Start listening to network changes
- */
+
+ //Start listening to network changes
+
 export const startNetworkListener = (onConnected: () => void) => {
   stopNetworkListener(); // safety
 
@@ -16,9 +16,9 @@ export const startNetworkListener = (onConnected: () => void) => {
   });
 };
 
-/**
- * Stop listening to network changes
- */
+
+//Stop listening to network changes
+
 export const stopNetworkListener = () => {
   if (unsubscribe) {
     unsubscribe();

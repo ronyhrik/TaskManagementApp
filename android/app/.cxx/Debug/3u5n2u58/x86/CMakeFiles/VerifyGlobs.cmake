@@ -12,6 +12,30 @@ if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
   file(TOUCH_NOCREATE "/Users/user/Documents/Assessment/TaskManagementApp/android/app/.cxx/Debug/3u5n2u58/x86/CMakeFiles/cmake.verify_globs")
 endif()
 
+# react_codegen_SRCS at /Users/user/Documents/Assessment/TaskManagementApp/node_modules/react-native-date-picker/android/build/generated/source/codegen/jni/CMakeLists.txt:9 (file)
+file(GLOB NEW_GLOB LIST_DIRECTORIES true "/Users/user/Documents/Assessment/TaskManagementApp/node_modules/react-native-date-picker/android/build/generated/source/codegen/jni/*.cpp")
+set(OLD_GLOB
+  "/Users/user/Documents/Assessment/TaskManagementApp/node_modules/react-native-date-picker/android/build/generated/source/codegen/jni/RNDatePickerSpecs-generated.cpp"
+  )
+if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
+  message("-- GLOB mismatch!")
+  file(TOUCH_NOCREATE "/Users/user/Documents/Assessment/TaskManagementApp/android/app/.cxx/Debug/3u5n2u58/x86/CMakeFiles/cmake.verify_globs")
+endif()
+
+# react_codegen_SRCS at /Users/user/Documents/Assessment/TaskManagementApp/node_modules/react-native-date-picker/android/build/generated/source/codegen/jni/CMakeLists.txt:9 (file)
+file(GLOB NEW_GLOB LIST_DIRECTORIES true "/Users/user/Documents/Assessment/TaskManagementApp/node_modules/react-native-date-picker/android/build/generated/source/codegen/jni/react/renderer/components/RNDatePickerSpecs/*.cpp")
+set(OLD_GLOB
+  "/Users/user/Documents/Assessment/TaskManagementApp/node_modules/react-native-date-picker/android/build/generated/source/codegen/jni/react/renderer/components/RNDatePickerSpecs/ComponentDescriptors.cpp"
+  "/Users/user/Documents/Assessment/TaskManagementApp/node_modules/react-native-date-picker/android/build/generated/source/codegen/jni/react/renderer/components/RNDatePickerSpecs/EventEmitters.cpp"
+  "/Users/user/Documents/Assessment/TaskManagementApp/node_modules/react-native-date-picker/android/build/generated/source/codegen/jni/react/renderer/components/RNDatePickerSpecs/Props.cpp"
+  "/Users/user/Documents/Assessment/TaskManagementApp/node_modules/react-native-date-picker/android/build/generated/source/codegen/jni/react/renderer/components/RNDatePickerSpecs/ShadowNodes.cpp"
+  "/Users/user/Documents/Assessment/TaskManagementApp/node_modules/react-native-date-picker/android/build/generated/source/codegen/jni/react/renderer/components/RNDatePickerSpecs/States.cpp"
+  )
+if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
+  message("-- GLOB mismatch!")
+  file(TOUCH_NOCREATE "/Users/user/Documents/Assessment/TaskManagementApp/android/app/.cxx/Debug/3u5n2u58/x86/CMakeFiles/cmake.verify_globs")
+endif()
+
 # LIB_CUSTOM_SRCS at /Users/user/Documents/Assessment/TaskManagementApp/node_modules/react-native-safe-area-context/android/src/main/jni/CMakeLists.txt:12 (file)
 file(GLOB NEW_GLOB LIST_DIRECTORIES true "/Users/user/Documents/Assessment/TaskManagementApp/node_modules/react-native-safe-area-context/android/src/main/jni/*.cpp")
 set(OLD_GLOB

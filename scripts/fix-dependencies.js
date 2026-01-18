@@ -27,12 +27,12 @@ function fixBuildGradle() {
       console.log('🔧 Fixing react-native-sqlite-storage build.gradle: replacing jcenter() with mavenCentral()');
       content = content.replace(/jcenter\(\)/g, 'mavenCentral()');
       fs.writeFileSync(buildGradlePath, content, 'utf8');
-      console.log('✅ Fixed react-native-sqlite-storage build.gradle successfully');
+      console.log('Fixed react-native-sqlite-storage build.gradle successfully');
     } else {
       console.log('✓ react-native-sqlite-storage build.gradle is already correct (no jcenter() found)');
     }
   } catch (error) {
-    console.warn('⚠️  Warning: Could not fix build.gradle:', error.message);
+    console.warn('Warning: Could not fix build.gradle:', error.message);
     process.exit(0); // Don't fail npm install
   }
 }

@@ -6,16 +6,14 @@ import {
   cancelTaskNotification,
 } from "../services/notification.service";
 
-/**
- * Generate simple unique ID
- */
+
 const generateId = (): string => {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 };
 
-/**
- * Map DB row to Task
- */
+
+ //Map DB row to Task
+
 const mapRowToTask = (row: any): Task => ({
   id: row.id,
   title: row.title,
@@ -25,10 +23,9 @@ const mapRowToTask = (row: any): Task => ({
   reminderTime: row.reminderTime ?? undefined,
 });
 
-/**
- * Load all tasks from SQLite into Redux
- */
+//Load all tasks from SQLite into Redux store
 export const loadTasksFromDB = (): Promise<void> => {
+  console.log("📂 [DATABASE] Loading tasks from SQLite...");
   return new Promise((resolve, reject) => {
     db.transaction((tx: any) => {
       tx.executeSql(
@@ -37,10 +34,12 @@ export const loadTasksFromDB = (): Promise<void> => {
         (_: any, result: any) => {
           const rows = result.rows.raw();
           const tasks = rows.map(mapRowToTask);
+          console.log(`✅ [DATABASE] Loaded ${tasks.length} tasks from SQLite`);
           store.dispatch(setTasks(tasks));
           resolve();
         },
         (_: any, error: any) => {
+          console.error("❌ [DATABASE] Error loading tasks:", error);
           reject(error);
           return false;
         }
@@ -49,9 +48,7 @@ export const loadTasksFromDB = (): Promise<void> => {
   });
 };
 
-/**
- * Add new task with optional reminder
- */
+
 export const createTask = (title: string, reminderTime?: Date): Promise<void> => {
   const task: Task = {
     id: generateId(),
@@ -88,10 +85,11 @@ export const createTask = (title: string, reminderTime?: Date): Promise<void> =>
               new Date(task.reminderTime)
             );
           }
-
+          
           resolve();
         },
         (_: any, error: any) => {
+          console.error("❌ [TASK] Error creating task:", error);
           reject(error);
           return false;
         }
@@ -100,9 +98,7 @@ export const createTask = (title: string, reminderTime?: Date): Promise<void> =>
   });
 };
 
-/**
- * Update existing task
- */
+
 export const updateExistingTask = (
   task: Task,
   reminderTime?: Date
@@ -115,6 +111,7 @@ export const updateExistingTask = (
       ? reminderTime.getTime()
       : task.reminderTime,
   };
+  console.log("✏️ [TASK] Updated task object:", updatedTask);
 
   return new Promise((resolve, reject) => {
     db.transaction((tx: any) => {
@@ -138,7 +135,6 @@ export const updateExistingTask = (
           // Cancel old notification
           cancelTaskNotification(updatedTask.id);
 
-          // Re-schedule if needed
           if (!updatedTask.completed && updatedTask.reminderTime) {
             scheduleTaskNotification(
               updatedTask.id,
@@ -150,6 +146,7 @@ export const updateExistingTask = (
           resolve();
         },
         (_: any, error: any) => {
+          console.error("❌ [TASK] Error updating task:", error);
           reject(error);
           return false;
         }
@@ -158,9 +155,7 @@ export const updateExistingTask = (
   });
 };
 
-/**
- * Toggle task completed
- */
+
 export const toggleTaskCompleted = (task: Task): Promise<void> => {
   return updateExistingTask(
     { ...task, completed: !task.completed },
@@ -168,9 +163,7 @@ export const toggleTaskCompleted = (task: Task): Promise<void> => {
   );
 };
 
-/**
- * Delete task and cancel notification
- */
+
 export const deleteTask = (taskId: string): Promise<void> => {
   return new Promise((resolve, reject) => {
     db.transaction((tx) => {
@@ -183,6 +176,7 @@ export const deleteTask = (taskId: string): Promise<void> => {
           resolve();
         },
         (_: any, error: any) => {
+          console.error("❌ [TASK] Error deleting task:", error);
           reject(error);
           return false;
         }

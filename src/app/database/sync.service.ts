@@ -8,9 +8,8 @@ import {
 } from "../store/slices/sync.slice";
 import { setTasks, Task } from "../store/slices/task.slice";
 
-/**
- * Helper: Get all local tasks
- */
+
+//Get all local tasks
 const getLocalTasks = (): Promise<Task[]> => {
   return new Promise((resolve, reject) => {
     db.transaction((tx: any) => {
@@ -38,9 +37,8 @@ const getLocalTasks = (): Promise<Task[]> => {
   });
 };
 
-/**
- * Helper: Insert or update task in SQLite
- */
+
+//Insert or update task in SQLite
 const upsertLocalTask = (task: Task): Promise<void> => {
   return new Promise((resolve, reject) => {
     db.transaction((tx: any) => {
@@ -68,9 +66,9 @@ const upsertLocalTask = (task: Task): Promise<void> => {
   });
 };
 
-/**
- * MAIN SYNC FUNCTION
- */
+
+  //MAIN SYNC FUNCTION
+
 export const syncTasks = async (userId: string) => {
   const dispatch = store.dispatch;
 
@@ -85,9 +83,9 @@ export const syncTasks = async (userId: string) => {
       .doc(userId)
       .collection("tasks");
 
-    /**
-     * 1️⃣ PUSH local pending tasks to Firestore
-     */
+
+     //PUSH local pending tasks to Firestore
+
     for (const task of pendingTasks) {
       await userTasksRef.doc(task.id).set({
         title: task.title,
@@ -102,9 +100,9 @@ export const syncTasks = async (userId: string) => {
       });
     }
 
-    /**
-     * 2️⃣ PULL remote tasks
-     */
+
+     // PULL remote tasks
+
     const snapshot = await userTasksRef.get();
 
     const remoteTasks: Task[] = snapshot.docs.map((doc) => {
@@ -119,16 +117,14 @@ export const syncTasks = async (userId: string) => {
       };
     });
 
-    /**
-     * 3️⃣ MERGE (Last Write Wins)
-     */
+      
     const localMap = new Map(localTasks.map((t) => [t.id, t]));
 
     for (const remoteTask of remoteTasks) {
       const localTask = localMap.get(remoteTask.id);
 
       if (!localTask) {
-        // New remote → insert locally
+        // New remote insert locally
         await upsertLocalTask(remoteTask);
       } else {
         // Conflict resolution
@@ -138,15 +134,13 @@ export const syncTasks = async (userId: string) => {
       }
     }
 
-    /**
-     * 4️⃣ Reload local DB → Redux
-     */
+   //Reload local DB Redux
     const finalLocalTasks = await getLocalTasks();
     dispatch(setTasks(finalLocalTasks));
 
     dispatch(syncSuccess());
   } catch (error: any) {
-    console.error("❌ Sync failed:", error);
+    console.error("Sync failed:", error);
     dispatch(syncFailure(error.message || "Sync failed"));
   }
 };

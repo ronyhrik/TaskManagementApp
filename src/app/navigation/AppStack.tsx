@@ -1,14 +1,25 @@
 import { createNativeStackNavigator, NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Task } from "../store/slices/task.slice";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, View, ActivityIndicator } from "react-native";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { toggleTheme, selectThemeMode } from "../store/slices/theme.slice";
 import { getTheme } from "../config/theme";
-import { useMemo } from "react";
+import { useMemo, lazy, Suspense } from "react";
 
-// Import screens normally (no lazy loading for React Navigation compatibility)
-import TaskListScreen from "../ui/screens/TaskListScreen";
-import TaskEditorScreen from "../ui/screens/TaskEditorScreen";
+const TaskListScreen = lazy(() => import("../ui/screens/TaskListScreen"));
+const TaskEditorScreen = lazy(() => import("../ui/screens/TaskEditorScreen"));
+
+const LazyScreenFallback = () => (
+  <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+    <ActivityIndicator size="large" color="#007AFF" />
+  </View>
+);
+
+const LazyScreen = (Component: any) => (props: any) => (
+  <Suspense fallback={<LazyScreenFallback />}>
+    <Component {...props} />
+  </Suspense>
+);
 
 export type AppStackParamList = {
   Tasks: undefined;
@@ -53,12 +64,12 @@ export default function AppStack() {
     >
       <Stack.Screen
         name="Tasks"
-        component={TaskListScreen}
+        component={LazyScreen(TaskListScreen)}
         options={{ title: "My Tasks" }}
       />
       <Stack.Screen
         name="Editor"
-        component={TaskEditorScreen}
+        component={LazyScreen(TaskEditorScreen)}
         options={{ title: "Add Task" }}
       />
     </Stack.Navigator>

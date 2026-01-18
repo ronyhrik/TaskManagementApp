@@ -44,6 +44,7 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
+  include("/Users/user/Documents/Assessment/TaskManagementApp/android/app/.cxx/Debug/3u5n2u58/armeabi-v7a/RNDatePickerSpecs_autolinked_build/cmake_install.cmake")
   include("/Users/user/Documents/Assessment/TaskManagementApp/android/app/.cxx/Debug/3u5n2u58/armeabi-v7a/safeareacontext_autolinked_build/cmake_install.cmake")
   include("/Users/user/Documents/Assessment/TaskManagementApp/android/app/.cxx/Debug/3u5n2u58/armeabi-v7a/rnscreens_autolinked_build/cmake_install.cmake")
 

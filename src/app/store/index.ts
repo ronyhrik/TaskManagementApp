@@ -9,11 +9,11 @@ export const store = configureStore({
     tasks: taskReducer,
     theme: themeReducer,
   },
-  middleware: (getDefaultMiddleware) =>
+  middleware: (getDefaultMiddleware: any) =>
     getDefaultMiddleware({
       serializableCheck: {
         // Ignore these action types from serialization checks
-        // They come from Firebase and are not serializable
+        //  come from Firebase and are not serializable
         ignoredActions: [
           "auth/setUser",
           "@@INIT",

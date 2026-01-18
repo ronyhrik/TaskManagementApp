@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+*.egg-info/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+
+# Coverage
+coverage/
+
+# Build artifacts
+build/
+dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# iOS
+ios/Pods/
+ios/Podfile.lock
+ios/build/
+*.xcworkspace/
+*.xcodeproj/xcuserdata/
+
+# Android
+android/build/
+android/.gradle/
+android/local.properties
+android/*.iml
+
+# Metro bundler cache
+.metro-bundler-cache/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db

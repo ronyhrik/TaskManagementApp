@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "*": ["node_modules/*", "*"]
+    },
+    "skipLibCheck": true,
+    "allowJs": true
+  },
+  "include": ["**/*"],
+  "exclude": ["node_modules", "android", "ios"]
+}

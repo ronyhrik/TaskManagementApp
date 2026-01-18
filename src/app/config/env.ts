@@ -1,5 +1,5 @@
-// Hardcoded environment variables for development
-// This works reliably in React Native without native linking
+
+
 
 const AppConfig = {
   APP_ENV: "dev",
@@ -13,10 +13,7 @@ const AppConfig = {
   ENABLE_LOGS: true,
 };
 
-/**
- * Centralized environment config
- * This prevents direct usage of AppConfig.X everywhere in app
- */
+//Centralized environment config
 export const ENV = {
   APP_ENV: AppConfig.APP_ENV as "dev" | "staging" | "prod",
 
@@ -31,9 +28,7 @@ export const ENV = {
   ENABLE_LOGS: AppConfig.ENABLE_LOGS,
 };
 
-/**
- * Runtime safety check
- */
+
 export const validateEnv = () => {
   const required = [
     "FIREBASE_API_KEY",
@@ -46,11 +41,11 @@ export const validateEnv = () => {
 
   required.forEach((key) => {
     if (!(AppConfig as any)[key]) {
-      throw new Error(`❌ Missing env variable: ${key}`);
+      throw new Error(`Missing env variable: ${key}`);
     }
   });
 
   if (ENV.ENABLE_LOGS) {
-    console.log("✅ ENV Loaded:", ENV.APP_ENV);
+    console.log("ENV Loaded:", ENV.APP_ENV);
   }
 };

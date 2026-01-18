@@ -17,18 +17,24 @@ const TaskListScreen = memo(function TaskListScreen({ navigation }: AppStackProp
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    loadTasksFromDB().catch((err) => console.error("Failed to load tasks:", err));
+    console.log("📄 [SCREEN] TaskListScreen mounted, loading tasks...");
+    loadTasksFromDB().catch((err) => {
+      console.error("❌ [SCREEN] Failed to load tasks:", err);
+    });
   }, []);
 
   const handleToggleComplete = useCallback(async (task: Task) => {
     try {
+      console.log("✅ [SCREEN] Toggle complete for task:", task.id);
       await toggleTaskCompleted(task);
     } catch (error: any) {
+      console.error("❌ [SCREEN] Failed to toggle task:", error);
       Alert.alert("Error", error.message || "Failed to update task");
     }
   }, []);
 
   const handleDeleteTask = useCallback((taskId: string) => {
+    console.log("🗑️ [SCREEN] Delete task prompt for:", taskId);
     Alert.alert("Delete Task", "Are you sure you want to delete this task?", [
       { text: "Cancel", style: "cancel" },
       {
@@ -36,8 +42,10 @@ const TaskListScreen = memo(function TaskListScreen({ navigation }: AppStackProp
         style: "destructive",
         onPress: async () => {
           try {
+            console.log("🗑️ [SCREEN] Deleting task:", taskId);
             await deleteTask(taskId);
           } catch (error: any) {
+            console.error("❌ [SCREEN] Failed to delete task:", error);
             Alert.alert("Error", error.message || "Failed to delete task");
           }
         },
@@ -46,6 +54,7 @@ const TaskListScreen = memo(function TaskListScreen({ navigation }: AppStackProp
   }, []);
 
   const handleLogout = useCallback(() => {
+    console.log("🚪 [SCREEN] Logout prompt shown");
     Alert.alert("Logout", "Are you sure you want to logout?", [
       { text: "Cancel", style: "cancel" },
       {
@@ -53,9 +62,11 @@ const TaskListScreen = memo(function TaskListScreen({ navigation }: AppStackProp
         style: "destructive",
         onPress: async () => {
           try {
+            console.log("🚪 [SCREEN] Logging out...");
             await logout();
             dispatch(setUser(null));
           } catch (error: any) {
+            console.error("❌ [SCREEN] Failed to logout:", error);
             Alert.alert("Error", error.message || "Failed to logout");
           }
         },
