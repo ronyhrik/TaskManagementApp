@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { setUser } from "../../store/slices/auth.slice";
 import { selectThemeMode } from "../../store/slices/theme.slice";
 import { getTheme } from "../../config/theme";
+import { clearAllTasks } from "../../database/task.repository";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
@@ -29,6 +30,14 @@ const SignupScreen = memo(function SignupScreen() {
 
     try {
       setLoading(true);
+      // Clear any existing tasks from previous user
+      try {
+        await clearAllTasks();
+      } catch (err) {
+        console.error("Error clearing tasks:", err);
+        // Continue even if clearing fails
+      }
+      
       const res = await signup(email.trim(), password);
       dispatch(setUser(res.user));
       Alert.alert("Success", "Account created successfully!");

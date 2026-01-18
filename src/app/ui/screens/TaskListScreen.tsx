@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback, useMemo, memo } from "react";
 import { View, FlatList, StyleSheet, Text, Button, Alert } from "react-native";
 import { useAppSelector, useAppDispatch } from "../../store/hooks";
-import { loadTasksFromDB, toggleTaskCompleted, deleteTask } from "../../database/task.repository";
+import { loadTasksFromDB, toggleTaskCompleted, deleteTask, clearAllTasks } from "../../database/task.repository";
 import { Task } from "../../store/slices/task.slice";
 import TaskItem from "../components/TaskItem";
 import { AppStackProps } from "../../navigation/AppStack";
@@ -17,24 +17,24 @@ const TaskListScreen = memo(function TaskListScreen({ navigation }: AppStackProp
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    console.log("📄 [SCREEN] TaskListScreen mounted, loading tasks...");
+
     loadTasksFromDB().catch((err) => {
-      console.error("❌ [SCREEN] Failed to load tasks:", err);
+      console.error("Failed to load tasks:", err);
     });
   }, []);
 
   const handleToggleComplete = useCallback(async (task: Task) => {
     try {
-      console.log("✅ [SCREEN] Toggle complete for task:", task.id);
+      
       await toggleTaskCompleted(task);
     } catch (error: any) {
-      console.error("❌ [SCREEN] Failed to toggle task:", error);
+      console.error("Failed to toggle task:", error);
       Alert.alert("Error", error.message || "Failed to update task");
     }
   }, []);
 
   const handleDeleteTask = useCallback((taskId: string) => {
-    console.log("🗑️ [SCREEN] Delete task prompt for:", taskId);
+   
     Alert.alert("Delete Task", "Are you sure you want to delete this task?", [
       { text: "Cancel", style: "cancel" },
       {
@@ -42,10 +42,10 @@ const TaskListScreen = memo(function TaskListScreen({ navigation }: AppStackProp
         style: "destructive",
         onPress: async () => {
           try {
-            console.log("🗑️ [SCREEN] Deleting task:", taskId);
+
             await deleteTask(taskId);
           } catch (error: any) {
-            console.error("❌ [SCREEN] Failed to delete task:", error);
+            console.error("Failed to delete task:", error);
             Alert.alert("Error", error.message || "Failed to delete task");
           }
         },
@@ -54,7 +54,7 @@ const TaskListScreen = memo(function TaskListScreen({ navigation }: AppStackProp
   }, []);
 
   const handleLogout = useCallback(() => {
-    console.log("🚪 [SCREEN] Logout prompt shown");
+
     Alert.alert("Logout", "Are you sure you want to logout?", [
       { text: "Cancel", style: "cancel" },
       {
@@ -62,11 +62,17 @@ const TaskListScreen = memo(function TaskListScreen({ navigation }: AppStackProp
         style: "destructive",
         onPress: async () => {
           try {
-            console.log("🚪 [SCREEN] Logging out...");
+            // Clear local tasks before logout
+            try {
+              await clearAllTasks();
+            } catch (err) {
+              console.error("Error clearing tasks:", err);
+              // Continue even if clearing fails
+            }
             await logout();
             dispatch(setUser(null));
           } catch (error: any) {
-            console.error("❌ [SCREEN] Failed to logout:", error);
+            console.error("Failed to logout:", error);
             Alert.alert("Error", error.message || "Failed to logout");
           }
         },

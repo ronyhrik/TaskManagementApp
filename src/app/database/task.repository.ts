@@ -11,8 +11,28 @@ const generateId = (): string => {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 };
 
+// Clear all tasks from SQLite (used on logout/signup)
+export const clearAllTasks = (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    db.transaction((tx: any) => {
+      tx.executeSql(
+        "DELETE FROM tasks",
+        [],
+        () => {
+          store.dispatch(setTasks([]));
+          resolve();
+        },
+        (_: any, error: any) => {
+          console.error("Error clearing tasks:", error);
+          reject(error);
+          return false;
+        }
+      );
+    });
+  });
+};
 
- //Map DB row to Task
+//Map DB row to Task
 
 const mapRowToTask = (row: any): Task => ({
   id: row.id,
@@ -25,7 +45,7 @@ const mapRowToTask = (row: any): Task => ({
 
 //Load all tasks from SQLite into Redux store
 export const loadTasksFromDB = (): Promise<void> => {
-  console.log("📂 [DATABASE] Loading tasks from SQLite...");
+
   return new Promise((resolve, reject) => {
     db.transaction((tx: any) => {
       tx.executeSql(
@@ -34,12 +54,11 @@ export const loadTasksFromDB = (): Promise<void> => {
         (_: any, result: any) => {
           const rows = result.rows.raw();
           const tasks = rows.map(mapRowToTask);
-          console.log(`✅ [DATABASE] Loaded ${tasks.length} tasks from SQLite`);
           store.dispatch(setTasks(tasks));
           resolve();
         },
         (_: any, error: any) => {
-          console.error("❌ [DATABASE] Error loading tasks:", error);
+          console.error("Error loading tasks:", error);
           reject(error);
           return false;
         }
@@ -89,7 +108,7 @@ export const createTask = (title: string, reminderTime?: Date): Promise<void> =>
           resolve();
         },
         (_: any, error: any) => {
-          console.error("❌ [TASK] Error creating task:", error);
+          console.error("Error creating task:", error);
           reject(error);
           return false;
         }
@@ -111,7 +130,7 @@ export const updateExistingTask = (
       ? reminderTime.getTime()
       : task.reminderTime,
   };
-  console.log("✏️ [TASK] Updated task object:", updatedTask);
+  console.log("Updated task object:", updatedTask);
 
   return new Promise((resolve, reject) => {
     db.transaction((tx: any) => {
@@ -146,7 +165,7 @@ export const updateExistingTask = (
           resolve();
         },
         (_: any, error: any) => {
-          console.error("❌ [TASK] Error updating task:", error);
+          console.error("Error updating task:", error);
           reject(error);
           return false;
         }
@@ -176,7 +195,7 @@ export const deleteTask = (taskId: string): Promise<void> => {
           resolve();
         },
         (_: any, error: any) => {
-          console.error("❌ [TASK] Error deleting task:", error);
+          console.error("Error deleting task:", error);
           reject(error);
           return false;
         }

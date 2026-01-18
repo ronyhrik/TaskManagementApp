@@ -152,7 +152,6 @@ export default function TaskEditorScreen({ navigation, route }: AppStackProps<"E
               onDateChange={setPendingDate}
               mode="datetime"
               minimumDate={new Date()}
-              textColor={theme.text}
             />
 
             <View style={styles.datePickerButtons}>
