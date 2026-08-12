@@ -1,4 +1,5 @@
 import NetInfo from "@react-native-community/netinfo";
+import { logger } from "../utils/logger";
 
 let unsubscribe: (() => void) | null = null;
 
@@ -9,7 +10,7 @@ export const startNetworkListener = (onConnected: () => void) => {
   stopNetworkListener(); // safety
 
   unsubscribe = NetInfo.addEventListener((state) => {
-    console.log("Network state changed:", state.isConnected);
+    logger.log("Network state changed:", state.isConnected);
     if (state.isConnected === true) {
       onConnected();
     }

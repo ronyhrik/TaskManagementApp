@@ -2,7 +2,6 @@ import React, { useState, useLayoutEffect, useMemo } from "react";
 import {
   View,
   TextInput,
-  Button,
   StyleSheet,
   Alert,
   Text,
@@ -11,16 +10,18 @@ import {
   ScrollView,
 } from "react-native";
 import DatePicker from "react-native-date-picker";
-import { Task } from "../../store/slices/task.slice";
-import { createTask, updateExistingTask } from "../../database/task.repository";
+import { createTaskThunk, updateTaskThunk } from "../../store/slices/task.slice";
 import { AppStackProps } from "../../navigation/AppStack";
-import { useAppSelector } from "../../store/hooks";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { selectThemeMode } from "../../store/slices/theme.slice";
 import { getTheme } from "../../config/theme";
+import { logger } from "../../utils/logger";
+import ThemedButton from "../components/ThemedButton";
 
 export default function TaskEditorScreen({ navigation, route }: AppStackProps<"Editor">) {
   const editingTask = route.params?.task;
 
+  const dispatch = useAppDispatch();
   const themeMode = useAppSelector(selectThemeMode);
   const theme = useMemo(() => getTheme(themeMode), [themeMode]);
 
@@ -30,7 +31,7 @@ export default function TaskEditorScreen({ navigation, route }: AppStackProps<"E
   );
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [hasReminder, setHasReminder] = useState(!!editingTask?.reminderTime);
-  
+  const [saving, setSaving] = useState(false);
 
   const [pendingDate, setPendingDate] = useState<Date>(
     editingTask?.reminderTime ? new Date(editingTask.reminderTime) : new Date()
@@ -43,58 +44,43 @@ export default function TaskEditorScreen({ navigation, route }: AppStackProps<"E
   }, [navigation, editingTask]);
 
   const onSave = async () => {
-    console.log("Saving task...");
     if (!title.trim()) {
       Alert.alert("Error", "Title cannot be empty");
       return;
     }
 
     try {
+      setSaving(true);
       const reminderToSave = hasReminder ? new Date(reminderTime.getTime()) : undefined;
-      
-      console.log("save with reminder:", {
-        hasReminder,
-        reminderToSave: reminderToSave?.toLocaleString(),
-        milliseconds: reminderToSave?.getTime(),
-        currentTime: new Date().toLocaleString(),
-        currentMs: Date.now()
-      });
-      
+
       if (editingTask) {
-
-        await updateExistingTask(
-          { ...editingTask, title: title.trim() },
-          reminderToSave
-        );
+        await dispatch(
+          updateTaskThunk({ task: { ...editingTask, title: title.trim() }, reminderTime: reminderToSave })
+        ).unwrap();
       } else {
-
-        await createTask(title.trim(), reminderToSave);
+        await dispatch(createTaskThunk({ title: title.trim(), reminderTime: reminderToSave })).unwrap();
       }
-      
-      console.log("Task saved successfully");
+
       navigation.goBack();
     } catch (error: any) {
-      console.error("Save error:", error);
-      Alert.alert("Error", error.message || "Failed to save task");
+      logger.error("Save error:", error);
+      Alert.alert("Error", error?.message || "Failed to save task");
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleSetReminder = () => {
-
     setPendingDate(new Date(reminderTime.getTime()));
     setShowDatePicker(true);
   };
 
   const handleClearReminder = () => {
-    console.log("Clearing reminder");
     setHasReminder(false);
   };
 
   const handleDateConfirm = (selectedDate: Date) => {
     const confirmedTime = new Date(selectedDate.getTime());
-    
-    console.log("Reminder set to: " + confirmedTime.toLocaleString());
-    
     setReminderTime(confirmedTime);
     setHasReminder(true);
     setShowDatePicker(false);
@@ -109,10 +95,12 @@ export default function TaskEditorScreen({ navigation, route }: AppStackProps<"E
         style={[styles.input, { backgroundColor: theme.surface, borderColor: theme.border, color: theme.text }]}
         autoFocus
         placeholderTextColor={theme.textSecondary}
+        editable={!saving}
       />
 
-      <TouchableOpacity 
-        onPress={handleSetReminder} 
+      <TouchableOpacity
+        onPress={handleSetReminder}
+        disabled={saving}
         style={[
           styles.reminderButton,
           { backgroundColor: theme.surface, borderColor: theme.border },
@@ -121,20 +109,16 @@ export default function TaskEditorScreen({ navigation, route }: AppStackProps<"E
       >
         <Text style={[styles.reminderButtonText, { color: theme.text }]}>
           {hasReminder
-            ? `Reminder: ${reminderTime.toLocaleDateString()} at ${reminderTime.toLocaleTimeString([], { 
-                hour: '2-digit', 
-                minute: '2-digit' 
+            ? `Reminder: ${reminderTime.toLocaleDateString()} at ${reminderTime.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
               })}`
             : "Set Reminder Time"}
         </Text>
       </TouchableOpacity>
 
       {hasReminder && (
-        <Button
-          title="Clear Reminder"
-          onPress={handleClearReminder}
-          color={theme.error}
-        />
+        <ThemedButton title="Clear Reminder" onPress={handleClearReminder} variant="danger" disabled={saving} />
       )}
 
       <Modal
@@ -146,7 +130,7 @@ export default function TaskEditorScreen({ navigation, route }: AppStackProps<"E
         <View style={[styles.datePickerContainer, { backgroundColor: themeMode === "dark" ? "rgba(0, 0, 0, 0.7)" : "rgba(0, 0, 0, 0.5)" }]}>
           <View style={[styles.datePickerContent, { backgroundColor: theme.surface }]}>
             <Text style={[styles.datePickerTitle, { color: theme.text }]}>Select Date & Time</Text>
-            
+
             <DatePicker
               date={pendingDate}
               onDateChange={setPendingDate}
@@ -155,39 +139,30 @@ export default function TaskEditorScreen({ navigation, route }: AppStackProps<"E
             />
 
             <View style={styles.datePickerButtons}>
-              <Button
+              <ThemedButton
                 title="Cancel"
                 onPress={() => {
                   setPendingDate(new Date(reminderTime.getTime()));
                   setShowDatePicker(false);
                 }}
-                color={theme.textSecondary}
+                variant="muted"
               />
-              <Button
-                title="Confirm"
-                onPress={() => handleDateConfirm(pendingDate)}
-                color={theme.primary}
-              />
+              <ThemedButton title="Confirm" onPress={() => handleDateConfirm(pendingDate)} variant="primary" />
             </View>
           </View>
         </View>
       </Modal>
 
-      {/* Save Button */}
       <View style={styles.saveButtonContainer}>
-        <Button
-          title="Save Task"
-          onPress={onSave}
-          color={theme.success}
-        />
+        <ThemedButton title={saving ? "Saving..." : "Save Task"} onPress={onSave} variant="success" disabled={saving} />
       </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
+  container: {
+    flex: 1,
     padding: 16,
   },
   input: {

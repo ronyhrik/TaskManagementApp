@@ -1,25 +1,14 @@
 import { createNativeStackNavigator, NativeStackScreenProps } from "@react-navigation/native-stack";
-import { Task } from "../store/slices/task.slice";
-import { Pressable, Text, View, ActivityIndicator } from "react-native";
+import { Pressable, Text } from "react-native";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { toggleTheme, selectThemeMode } from "../store/slices/theme.slice";
+import { toggleThemeThunk, selectThemeMode } from "../store/slices/theme.slice";
 import { getTheme } from "../config/theme";
-import { useMemo, lazy, Suspense } from "react";
+import { useMemo, lazy } from "react";
+import { LazyScreen } from "./lazyScreens";
+import type { Task } from "../types/task";
 
 const TaskListScreen = lazy(() => import("../ui/screens/TaskListScreen"));
 const TaskEditorScreen = lazy(() => import("../ui/screens/TaskEditorScreen"));
-
-const LazyScreenFallback = () => (
-  <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-    <ActivityIndicator size="large" color="#007AFF" />
-  </View>
-);
-
-const LazyScreen = (Component: any) => (props: any) => (
-  <Suspense fallback={<LazyScreenFallback />}>
-    <Component {...props} />
-  </Suspense>
-);
 
 export type AppStackParamList = {
   Tasks: undefined;
@@ -36,7 +25,7 @@ export default function AppStack() {
   const theme = useMemo(() => getTheme(themeMode), [themeMode]);
 
   const handleToggleTheme = () => {
-    dispatch(toggleTheme());
+    dispatch(toggleThemeThunk());
   };
 
   return (

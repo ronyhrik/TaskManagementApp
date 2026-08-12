@@ -1,203 +1,160 @@
-Task Management App
+# Task Management App
 
-A modern, cross-platform task management application built with React Native, featuring offline-first architecture, cloud synchronization, push notifications, and dark/light theme support.
+A cross-platform (iOS/Android) task management app built with React Native, featuring offline-first storage, Firebase-backed authentication and cloud sync, local + push notifications, and dark/light theming.
 
-Features
+## Features
 
-- Authentication: Secure Firebase Email/Password authentication
-- Task Management: Create, edit, delete, and complete tasks with ease
-- Offline Support: Full offline functionality with SQLite local storage
-- Cloud Sync: Bidirectional sync with Firestore when online
-- Push Notifications: Local push notifications with customizable task reminders
-- Dark/Light Theme: Toggle between dark and light modes with persistent state
-- Cross-Platform: iOS and Android support with native performance
-- Type-Safe: Full TypeScript support with strict mode
+- **Authentication** — Firebase Email/Password auth
+- **Task management** — create, edit, delete, and complete tasks
+- **Offline-first** — every operation hits SQLite first, then syncs to the cloud
+- **Cloud sync** — bidirectional sync with Firestore, last-write-wins conflict resolution
+- **Notifications** — on-device reminders (Notifee) for task due times, plus Firebase Cloud Messaging push notifications routed through the same local-notification channel
+- **Dark/light theme** — persisted across app restarts
+- **Multi-environment** — dev/staging/prod configs (see [Environments](#environments) below)
 
-Architecture
+## Architecture
 
-  UI Layer                             
-  - Components
-  - Screens
-
-State Management (Redux Toolkit)
-  - Auth State (user, login/logout)
-  - Task State (tasks array, CRUD operations)
-  - Theme State (light/dark mode)
-  - Sync State (online/offline status)
-
-Services Layer
-  - Auth Service (Firebase Email/Password)
-  - Notification Service (Notifee) 
-  - Network Service (Connectivity Monitoring)
-  - Sync Service (Offline-first sync)
-
-Database Layer (Repository Pattern)
-  - SQLite (Local storage, offline-first)
-  - Firestore (Cloud storage, real-time sync)
-
-
-
-Offline-First Architecture
-
-The app implements a offline-first strategy:
-
-1. Local Storage : All operations (add, edit, delete) happen on SQLite first
-2. Queued Sync: Changes are queued for cloud sync when offline
-3. Auto Sync: When online, changes sync to Firestore automatically
-4. Conflict Resolution: Last-write-wins for conflicting updates
-
- Directory Structure
+**Offline-first, layered architecture:**
 
 ```
-src/
-	-app/
-		-config/
-			-env.ts              //Environment configuration
-			-firebase.ts         //Firebase initialization
-			-theme.ts            //Theme colors (light/dark)
-		-database/
-			-sqlite.ts          //SQLite initialization
-			-task.repository.ts  // Task CRUD operations
-			-sync.service.ts     //Bidirectional sync logic
-		-services/
-			-auth.service.ts     //Firebase authentication
-			-notification.service.ts // Push notifications
-			-network.service.ts  //Connectivity monitoring
-		-store/
-			-index.ts            //Redux store configuration
-			-slices/
-				-auth.slice.ts   //Auth state
-				-task.slice.ts   //Task state
-				-theme.slice.ts  //Theme state
-				- sync.slice.ts   // Sync state
-		-navigation/
-			-RootNavigator.tsx   //Conditional routing
-			-AuthStack.tsx       //Auth screens
-			-AppStack.tsx        //App screens
-			-lazyScreens.tsx     //Lazy loading
-		-ui/
-			-screens/
-				-LoginScreen.tsx
-				-SignupScreen.tsx
-				-TaskListScreen.tsx
-				-TaskEditorScreen.tsx
-			-components/
-				-TaskItem.tsx
+UI (screens/components)
+  → Redux Toolkit (state)
+  → Services (business logic: auth, task, notification, messaging, network)
+  → Datasources (task.local / task.remote / theme.storage)
+  → SQLite (source of truth) + Firestore (cloud mirror)
+```
 
+**Why this shape:**
+- **SQLite as the source of truth, Firestore as a mirror** — every read/write hits SQLite first so the app is fully usable offline; a sync pass pushes pending local changes and pulls remote ones when connectivity returns (`task.service.ts::syncTasks`), resolved last-write-wins by `updatedAt`.
+- **Datasources vs. services** — datasources (`src/app/datasources/`) only know how to talk to one storage backend (local SQLite or remote Firestore); services (`src/app/services/`) hold the actual business rules (e.g. "cancel and reschedule a reminder when a task's due time changes") and are what the UI/Redux layer calls. This keeps swapping a backend (e.g. Firestore → a different API) a datasource-only change.
+- **`@react-native-firebase/*` (native SDKs) instead of the Firebase JS SDK** — needed for background FCM push delivery and better native performance; the JS SDK can't receive pushes while the app is killed.
+- **Redux Toolkit slices per domain** (`auth`, `tasks`, `theme`, `sync`) rather than one global reducer, so each feature's state/thunks stay colocated and independently testable.
 
-Libraries Used
+### Directory structure
 
-Core Framework
-- react-native (v0.83.1): Cross-platform mobile framework
-- typescript (v5.8.3): Type-safe JavaScript
+```
+src/app/
+  config/
+    env.ts              # typed wrapper around react-native-config
+    firebase.ts          # @react-native-firebase getters (auth/firestore/messaging)
+    theme.ts              # light/dark color tokens
+  database/
+    sqlite.ts             # SQLite connection + schema init
+  datasources/
+    task.local.datasource.ts   # SQLite CRUD for tasks
+    task.remote.datasource.ts  # Firestore CRUD + FCM token storage
+    theme.storage.ts           # persisted theme preference
+  services/
+    auth.service.ts         # Firebase Email/Password auth
+    task.service.ts          # task CRUD + reminder scheduling + sync orchestration
+    notification.service.ts  # Notifee local reminders
+    messaging.service.ts     # FCM registration + foreground push handling
+    network.service.ts       # connectivity monitoring (NetInfo)
+  store/
+    index.ts, hooks.ts
+    slices/
+      auth.slice.ts, task.slice.ts, theme.slice.ts, sync.slice.ts
+  navigation/
+    RootNavigator.tsx, AuthStack.tsx, AppStack.tsx, lazyScreens.tsx
+  ui/
+    screens/   # LoginScreen, SignupScreen, TaskListScreen, TaskEditorScreen
+    components/ # TaskItem, ThemedButton
+  types/
+    task.ts
+  utils/
+    logger.ts   # console logging gated behind ENABLE_LOGS
+```
 
-Navigation
-- @react-navigation/native: Navigation routing
-- @react-navigation/native-stack: Stack navigator
-- react-native-screens: Native screen management
-- react-native-safe-area-context: Safe area handling
+## Libraries used
 
-State Management
-- @reduxjs/toolkit (v2.11.2): Redux state management
-- react-redux (v9.2.5): React bindings for Redux
+| Library | Why |
+|---|---|
+| `react-native` 0.83.1 / `react` 19.2 | Core framework |
+| `typescript` | Type safety across the app |
+| `@react-navigation/native` + `native-stack` | Navigation; `react-native-screens` + `react-native-safe-area-context` are its native dependencies |
+| `@reduxjs/toolkit` + `react-redux` | App state (auth/tasks/theme/sync) |
+| `@react-native-firebase/app`, `/auth`, `/firestore`, `/messaging` | Native Firebase SDKs — auth, cloud DB, and push notifications |
+| `react-native-sqlite-storage` | Local offline-first database |
+| `@notifee/react-native` | Local task-reminder notifications and displaying foreground FCM pushes |
+| `react-native-config` | Per-environment `.env` values (`APP_ENV`, `API_URL`, `ENABLE_LOGS`) exposed to JS |
+| `@react-native-community/netinfo` | Connectivity monitoring, triggers sync when back online |
+| `react-native-date-picker` | Reminder date/time picker in the task editor |
+| `@react-native-async-storage/async-storage` | Persisted theme preference |
 
-Backend & Database
-- firebase (v10.12.2): Authentication and Firestore
-  - Email/Password authentication
-  - Cloud database with real-time sync
-- react-native-sqlite-storage (v6.0.1): Local SQLite database
-- sql.js (v1.8.0): SQL query execution
+## Environments
 
-Push Notifications
-- @notifee/react-native (v9.1.8): Local push notifications with sound
+The app supports **dev / staging / prod**, but the two platforms are wired to different degrees — see [ENVIRONMENTS.md](ENVIRONMENTS.md) for the full detail (including a scope note on what was intentionally left out and why). Summary:
 
-UI & Styling
-- react-native-modal-datetime-picker (v18.0.0): Date/time picker
-- react-native-vector-icons: Icon library
+| | dev | staging | prod |
+|---|---|---|---|
+| JS config (`APP_ENV`, `API_URL`, `ENABLE_LOGS`) | ✅ | ✅ | ✅ |
+| Android build variant + Firebase backend | ✅ real project | ✅ (placeholder backend) | ✅ (placeholder backend) |
+| iOS build configuration | Base config only — see note below | — | — |
 
-Networking
-- @react-native-community/netinfo (v11.4.0): Network monitoring
-- axios (v1.7.7): HTTP client
+All three environments currently point at the **same** Firebase project (`taskmanagementapp-41745`). Fully isolated per-environment Firebase backends and per-environment iOS build configurations were out of scope for this assignment; see [Known limitations](#known-limitations).
 
-How to Run
+### How to run each environment
 
-Prerequisites
-
-- Node.js (v18+) and npm
-- Xcode (for iOS on macOS)
-- Android Studio or Android SDK (for Android)
-- CocoaPods (for iOS dependencies)
-- Ruby (bundled with macOS)
-
-Installation
-
-# Install dependencies
+**1. Install dependencies (once):**
+```sh
 npm install
-
-# Install iOS pods
 cd ios && pod install && cd ..
+```
 
-Run Development Environment
+**2. Copy the sample env file(s) you need** (see [Sample .env files](#sample-env-files) below) — at minimum copy `.env.example` to `.env` so the default build works.
 
-iOS:
-npm run ios
+**3. Android — fully wired, per-environment:**
+```sh
+npx react-native run-android --mode devDebug       # dev
+npx react-native run-android --mode stagingDebug   # staging
+npx react-native run-android --mode prodDebug      # prod
 
-Android
-npm run android
+# Release APKs
+cd android && ./gradlew assembleDevRelease   # or assembleStagingRelease / assembleProdRelease
+```
+Each variant automatically picks up the matching `.env.*` file and `android/app/src/<flavor>/google-services.json`.
 
-Run Specific Environment
+**4. iOS — default configuration only:**
+```sh
+npx react-native run-ios
+```
+This always builds against the base `.env` (dev values) and the base `GoogleService-Info.plist` at `ios/TaskManagementApp/`. The `--mode Debug-Dev` / `Debug-Staging` / `Debug-Prod` variants referenced in `ENVIRONMENTS.md` require a one-time manual Xcode configuration step that has **not** been completed — see that file if you want to finish it.
 
-# Development (default)
-npm run dev
+## Sample .env files
 
-# Staging
-npm run staging
+Real `.env*` files are git-ignored. Copy the matching sample and adjust values if needed:
 
-# Production
-npm run prod
+| Sample | Copy to | Used by |
+|---|---|---|
+| `.env.example` | `.env` | Default build (`npx react-native run-ios`, or Android without `--mode`) |
+| `.env.development.example` | `.env.development` | `--mode devDebug` |
+| `.env.staging.example` | `.env.staging` | `--mode stagingDebug` |
+| `.env.production.example` | `.env.production` | `--mode prodDebug` |
 
+Firebase config files (`GoogleService-Info.plist`, `google-services.json`) are **not** templated — they're committed as-is since they contain no secrets (Firebase relies on server-side security rules, not client config secrecy), and the app won't build without them.
 
-Build for Production
+## Known limitations
 
-Firebase Setup
+**Notifications**
+- Local reminders (Notifee) and FCM push both work, but FCM push delivery to a specific user requires a server/Cloud Function to actually send the message — none is included, only the client-side token registration (`messaging.service.ts`).
+- Android 13+ and iOS both require the user to grant notification permission on first run; if denied, reminders silently never fire (checked in Settings, not surfaced in-app).
 
-1. Create a Firebase project at [https://console.firebase.google.com](https://console.firebase.google.com)
-2. Enable Authentication (Email/Password method)
-3. Enable Firestore Database
-4. Download `google-services.json` (Android) and `GoogleService-Info.plist` (iOS)
-5. Place files in:
-   - Android: `android/app/`
-   - iOS: `ios/TaskManagementApp/`
+**Authentication**
+- Email/Password only — no social login, no biometric unlock, no password reset flow.
+- Logging out clears all local data (no local cache retained for a logged-out user).
 
+**Offline sync**
+- Last-write-wins by timestamp — no manual conflict resolution UI.
+- Sync only runs when the app is active and connectivity changes; no background sync.
+- No retry UI for a failed sync — it retries next time connectivity changes or the app restarts.
 
- Known Limitations
+**Environments**
+- All three environments share one Firebase project — no data isolation between dev/staging/prod.
+- iOS has no per-environment build configuration; it always builds against dev-equivalent config regardless of intent. See [ENVIRONMENTS.md](ENVIRONMENTS.md) for the (optional, undone) steps to finish this.
 
-1. Notifications
-- Local notifications only: Uses Notifee for local push notifications. Cloud push (Firebase Cloud Messaging) not implemented.
-- Android 13+: Requires user to grant notification permission
-- iOS: Requires permission on first app launch
-- Sound: Custom notification sound requires file inclusion in native bundle
+**Testing / CI**
+- No automated test coverage beyond the default RN template test.
+- No CI/CD pipeline configured.
 
-2. Authentication
-- Email/Password only: No social login (Google, Facebook, etc.)
-- No biometric: Face ID/Touch ID not available
-- No password reset: Not implemented
-- Session limited: Logout clears all local data
-
-3. Offline Sync
-- No conflict resolution UI: Uses automatic last-write-wins strategy
-- Large datasets: Performance may degrade with 1000+ tasks
-- Background sync: Only syncs when app is active
-- No manual retry: Failed syncs don't have retry UI
-
-4. Performance
-- Large lists: FlatList optimized but may struggle with 5000+ tasks
-
-5. Development
-- Hardcoded credentials: Firebase config in source code
-- No CI/CD: GitHub Actions not configured
-- Limited tests: not implemented unit test case
-
-
-
-
+**Performance**
+- Task list is a plain `FlatList`; not verified against very large (5000+) task counts.

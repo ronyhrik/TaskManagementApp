@@ -6,51 +6,59 @@ import { ActivityIndicator, View } from "react-native";
 import { store } from "./src/app/store";
 import RootNavigator from "./src/app/navigation/RootNavigator";
 import { initDB } from "./src/app/database/sqlite";
-import { syncTasks } from "./src/app/database/sync.service";
+import { syncTasksThunk } from "./src/app/store/slices/task.slice";
+import { hydrateThemeThunk } from "./src/app/store/slices/theme.slice";
 import { startNetworkListener, stopNetworkListener } from "./src/app/services/network.service";
 import { initNotifications } from "./src/app/services/notification.service";
+import { registerForPushNotifications, initForegroundMessageHandler } from "./src/app/services/messaging.service";
 import { subscribeToAuthChanges } from "./src/app/services/auth.service";
 import { setUser } from "./src/app/store/slices/auth.slice";
-import { initializeFirebase } from "./src/app/config/firebase";
+import { logger } from "./src/app/utils/logger";
 
 export default function App() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
 
   useEffect(() => {
+    let unsubscribeAuth: (() => void) | undefined;
+    let unsubscribeForegroundMessages: (() => void) | undefined;
+
     const setupApp = async () => {
       try {
-        await initializeFirebase();
         initDB();
         await initNotifications();
-        const unsubscribeAuth = subscribeToAuthChanges((user) => {
+        await store.dispatch(hydrateThemeThunk());
+
+        unsubscribeForegroundMessages = initForegroundMessageHandler();
+
+        unsubscribeAuth = subscribeToAuthChanges((user) => {
+          store.dispatch(setUser(user));
           if (user) {
-            store.dispatch(setUser(user));
-            syncTasks(user.uid);
-          } else {
-            store.dispatch(setUser(null));
+            store.dispatch(syncTasksThunk(user.uid));
+            registerForPushNotifications(user.uid);
           }
         });
+
         startNetworkListener(() => {
           const user = store.getState().auth.user;
           if (user) {
-            syncTasks(user.uid);
+            store.dispatch(syncTasksThunk(user.uid));
           }
         });
+
         setIsInitialized(true);
-        return () => {
-          unsubscribeAuth();
-          stopNetworkListener();
-        };
       } catch (error) {
-        console.error("❌ [APP] App initialization error:", error);
+        logger.error("App initialization error:", error);
         setInitError(error instanceof Error ? error.message : "Unknown error");
       }
     };
 
-    const cleanup = setupApp();
+    setupApp();
+
     return () => {
-      cleanup.then((c) => c?.());
+      unsubscribeAuth?.();
+      unsubscribeForegroundMessages?.();
+      stopNetworkListener();
     };
   }, []);
 

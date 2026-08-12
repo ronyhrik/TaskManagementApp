@@ -1,94 +1,66 @@
-import { Alert } from "react-native";
-import notifee from "@notifee/react-native";
+import notifee, { AndroidImportance, TriggerType, type TimestampTrigger } from "@notifee/react-native";
+import { logger } from "../utils/logger";
 
-// Track scheduled reminders
-const scheduledReminders: Map<string, NodeJS.Timeout> = new Map();
-
-
- //Initialize Notifee and request permissions
+const REMINDER_CHANNEL_ID = "task-reminders";
 
 export const initNotifications = async () => {
   try {
-    // Request notification permission
     await notifee.requestPermission();
-    
-    // Create notification channel for Android
+
     await notifee.createChannel({
-      id: "task-reminders",
+      id: REMINDER_CHANNEL_ID,
       name: "Task Reminders",
-      importance: 4, // High importance
+      importance: AndroidImportance.HIGH,
       sound: "default",
       vibration: true,
       lights: true,
     });
   } catch (error) {
-    console.warn("Notifee initialization error:", (error as any)?.message);
+    logger.warn("Notifee initialization error:", (error as Error)?.message);
   }
 };
 
-
- //Schedule a task reminder with local notification
-
-export const scheduleTaskNotification = async (
-  taskId: string,
-  title: string,
-  date: Date
-) => {
+// Real OS-level scheduling (AlarmManager / UNCalendarNotificationTrigger) — survives app kill,
+// unlike a JS setTimeout which only fires while the JS engine is alive.
+export const scheduleTaskNotification = async (taskId: string, title: string, date: Date) => {
   try {
-    // Ensure date is a proper Date object
-    const scheduledTime = date instanceof Date ? new Date(date.getTime()) : new Date(date);
-    const currentTime = Date.now();
-    const scheduledMs = scheduledTime.getTime();
-    
-    const timeUntilReminder = scheduledMs - currentTime;
-    
-    // Don't schedule past notifications (allow 1 second buffer)
-    if (timeUntilReminder <= 1000) {
-      console.warn(`🔔 [NOTIF] ⚠️ Reminder time is in the past or too close, skipping`);
+    const timestamp = date.getTime();
+
+    if (timestamp - Date.now() <= 1000) {
+      logger.warn("Reminder time is in the past or too close, skipping");
       return;
     }
-    
-    // Cancel any existing reminder for this task
-    if (scheduledReminders.has(taskId)) {
-      clearTimeout(scheduledReminders.get(taskId)!);
-    }
-    
-    // Schedule timeout for Notifee trigger
-    const timeoutId = setTimeout(() => {
-      // Display local notification with sound
-      notifee.displayNotification({
+
+    const trigger: TimestampTrigger = {
+      type: TriggerType.TIMESTAMP,
+      timestamp,
+    };
+
+    await notifee.createTriggerNotification(
+      {
         id: taskId,
         title: "⏰ Task Reminder",
         body: title,
         android: {
-          channelId: "task-reminders",
+          channelId: REMINDER_CHANNEL_ID,
           sound: "default",
-          pressAction: {
-            id: "default",
-          },
+          pressAction: { id: "default" },
         },
         ios: {
           sound: "default",
         },
-      }).catch((error) => {
-        console.warn("Could not display notification:", (error as any)?.message);
-      });
-      
-      scheduledReminders.delete(taskId);
-    }, timeUntilReminder);
-    
-    scheduledReminders.set(taskId, timeoutId);
+      },
+      trigger,
+    );
   } catch (error) {
-    console.warn("Could not schedule reminder:", (error as any)?.message);
+    logger.warn("Could not schedule reminder:", (error as Error)?.message);
   }
 };
 
-/**
- * Cancel a scheduled notification
- */
-export const cancelTaskNotification = (taskId: string) => {
-  if (scheduledReminders.has(taskId)) {
-    clearTimeout(scheduledReminders.get(taskId)!);
-    scheduledReminders.delete(taskId);
+export const cancelTaskNotification = async (taskId: string) => {
+  try {
+    await notifee.cancelTriggerNotification(taskId);
+  } catch (error) {
+    logger.warn("Could not cancel reminder:", (error as Error)?.message);
   }
 };

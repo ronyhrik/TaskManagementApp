@@ -1,24 +1,13 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import React, { useMemo, lazy, Suspense } from "react";
-import { Pressable, Text, View, ActivityIndicator } from "react-native";
+import React, { useMemo, lazy } from "react";
+import { Pressable, Text } from "react-native";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { selectThemeMode, toggleTheme } from "../store/slices/theme.slice";
+import { selectThemeMode, toggleThemeThunk } from "../store/slices/theme.slice";
 import { getTheme } from "../config/theme";
+import { LazyScreen } from "./lazyScreens";
 
 const LoginScreen = lazy(() => import("../ui/screens/LoginScreen"));
 const SignupScreen = lazy(() => import("../ui/screens/SignupScreen"));
-
-const LazyScreenFallback = () => (
-  <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-    <ActivityIndicator size="large" color="#007AFF" />
-  </View>
-);
-
-const LazyScreen = (Component: any) => (props: any) => (
-  <Suspense fallback={<LazyScreenFallback />}>
-    <Component {...props} />
-  </Suspense>
-);
 
 const Stack = createNativeStackNavigator();
 
@@ -28,7 +17,7 @@ export default function AuthStack() {
   const theme = useMemo(() => getTheme(themeMode), [themeMode]);
 
   const handleToggleTheme = () => {
-    dispatch(toggleTheme());
+    dispatch(toggleThemeThunk());
   };
 
   const ThemeToggleButton = () => (

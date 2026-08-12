@@ -1,43 +1,38 @@
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  type FirebaseAuthTypes,
+} from "@react-native-firebase/auth";
 import { getFirebaseAuth } from "../config/firebase";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, User } from "firebase/auth";
+import { logger } from "../utils/logger";
 
-
-export const login = (email: string, password: string) => {
-  return signInWithEmailAndPassword(getFirebaseAuth(), email, password)
-    .catch((error) => {
-      console.error("Login failed for", email, ":", error.code, error.message);
-      throw error;
-    });
+export type AppUser = {
+  uid: string;
+  email: string | null;
 };
 
-export const signup = (email: string, password: string) => {
-  console.log("Signup attempt with email:", email);
-  return createUserWithEmailAndPassword(getFirebaseAuth(), email, password)
-    .then((result) => {
-      console.log("Signup successful for:", email);
-      return result;
-    })
-    .catch((error) => {
-      console.error("Signup failed for", email, "- Code:", error.code, "Message:", error.message);
-      throw error;
-    });
+const toAppUser = (user: FirebaseAuthTypes.User | null): AppUser | null =>
+  user ? { uid: user.uid, email: user.email } : null;
+
+export const login = async (email: string, password: string): Promise<AppUser> => {
+  const credential = await signInWithEmailAndPassword(getFirebaseAuth(), email, password);
+  return toAppUser(credential.user)!;
 };
 
-export const logout = () => {
-  console.log("Logout attempt");
-  return signOut(getFirebaseAuth())
-    .then(() => {
-      console.log("Logout successful");
-    })
-    .catch((error) => {
-      console.error("Logout failed - Code:", error.code, "Message:", error.message);
-      throw error;
-    });
+export const signup = async (email: string, password: string): Promise<AppUser> => {
+  const credential = await createUserWithEmailAndPassword(getFirebaseAuth(), email, password);
+  return toAppUser(credential.user)!;
 };
 
-export const subscribeToAuthChanges = (callback: (user: User | null) => void) => {
+export const logout = async (): Promise<void> => {
+  await signOut(getFirebaseAuth());
+};
+
+export const subscribeToAuthChanges = (callback: (user: AppUser | null) => void) => {
   return onAuthStateChanged(getFirebaseAuth(), (user) => {
-    console.log("Auth state changed - User:", user?.email || "None");
-    callback(user);
+    logger.log("Auth state changed:", user?.email ?? "signed out");
+    callback(toAppUser(user));
   });
 };

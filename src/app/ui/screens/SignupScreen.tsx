@@ -1,13 +1,14 @@
 import React, { useState, useCallback, useMemo, memo } from "react";
-import { View, TextInput, Button, StyleSheet, Alert, Text, Pressable } from "react-native";
-import { signup } from "../../services/auth.service";
+import { View, TextInput, StyleSheet, Alert, Text, Pressable } from "react-native";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { setUser } from "../../store/slices/auth.slice";
+import { signupThunk } from "../../store/slices/auth.slice";
 import { selectThemeMode } from "../../store/slices/theme.slice";
 import { getTheme } from "../../config/theme";
-import { clearAllTasks } from "../../database/task.repository";
+import { clearTasksThunk } from "../../store/slices/task.slice";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { logger } from "../../utils/logger";
+import ThemedButton from "../components/ThemedButton";
 
 type AuthStackNavigationProp = NativeStackNavigationProp<any>;
 
@@ -30,20 +31,19 @@ const SignupScreen = memo(function SignupScreen() {
 
     try {
       setLoading(true);
-      // Clear any existing tasks from previous user
+      // Clear any existing tasks from a previous user before this device adopts a new account.
       try {
-        await clearAllTasks();
+        await dispatch(clearTasksThunk()).unwrap();
       } catch (err) {
-        console.error("Error clearing tasks:", err);
-        // Continue even if clearing fails
+        logger.error("Error clearing tasks:", err);
+        // Continue even if clearing fails.
       }
-      
-      const res = await signup(email.trim(), password);
-      dispatch(setUser(res.user));
+
+      await dispatch(signupThunk({ email: email.trim(), password })).unwrap();
       Alert.alert("Success", "Account created successfully!");
       navigation.navigate("Tasks");
     } catch (error: any) {
-      Alert.alert("Signup failed", error.message || "Unknown error");
+      Alert.alert("Signup failed", error?.message || "Unknown error");
     } finally {
       setLoading(false);
     }
@@ -56,7 +56,7 @@ const SignupScreen = memo(function SignupScreen() {
   return (
     <View style={dynamicStyles.container}>
       <Text style={dynamicStyles.title}>Create Account</Text>
-      
+
       <TextInput
         placeholder="Email"
         placeholderTextColor={theme.textSecondary}
@@ -78,11 +78,11 @@ const SignupScreen = memo(function SignupScreen() {
         editable={!loading}
       />
 
-      <Button
+      <ThemedButton
         title={loading ? "Signing Up..." : "Sign Up"}
         onPress={onSignup}
         disabled={loading}
-        color={theme.primary}
+        variant="primary"
       />
 
       <View style={dynamicStyles.signinLinkContainer}>

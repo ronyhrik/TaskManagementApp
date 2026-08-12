@@ -30,16 +30,24 @@ dist/
 
 # iOS
 ios/Pods/
-ios/Podfile.lock
 ios/build/
 *.xcworkspace/
 *.xcodeproj/xcuserdata/
+ios/.xcode.env.local
 
 # Android
 android/build/
 android/.gradle/
 android/local.properties
 android/*.iml
+android/app/.cxx/
+
+# Environment files (see .env.*.example for templates)
+.env
+.env.local
+.env.development
+.env.staging
+.env.production
 
 # Metro bundler cache
 .metro-bundler-cache/

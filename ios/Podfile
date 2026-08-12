@@ -8,13 +8,24 @@ require Pod::Executable.execute_command('node', ['-p',
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
 
-use_modular_headers!
+# FirebaseAuth (and other Firebase SDKs) ship Swift code. Without this, the
+# generated `-Swift.h` interop header isn't visible to other pod targets that
+# import the `Firebase.h` umbrella (e.g. RNFBMessaging), causing
+# "FirebaseAuth/FirebaseAuth-Swift.h file not found". See:
+# https://rnfirebase.io/#3-ios-setup
+$RNFirebaseAsStaticFramework = true
 
-linkage = ENV['USE_FRAMEWORKS']
-if linkage != nil
-  Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
-  use_frameworks! :linkage => linkage.to_sym
-end
+# Defaults to dynamic-framework linkage. Static linkage merges gRPC-C++/abseil's
+# C++ template instantiations into one binary across many pods, which crashes
+# Firestore at runtime (SIGSEGV deep in absl/grpc internals shortly after
+# launch) — a known Firebase iOS SDK incompatibility with `:linkage => :static`.
+# The RNFB pods still build as static frameworks individually (see
+# $RNFirebaseAsStaticFramework above), which is all that's actually needed for
+# FirebaseAuth's Swift header visibility. Override with USE_FRAMEWORKS=static
+# if ever needed.
+linkage = ENV['USE_FRAMEWORKS'] || 'dynamic'
+Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
+use_frameworks! :linkage => linkage.to_sym
 
 
 target 'TaskManagementApp' do
@@ -31,6 +42,17 @@ target 'TaskManagementApp' do
   pod 'Firebase/Core', :modular_headers => true
   pod 'Firebase/Auth', :modular_headers => true
   pod 'Firebase/Firestore', :modular_headers => true
+  pod 'Firebase/Messaging', :modular_headers => true
+
+  # Transitive deps that Swift-based Firebase pods need module maps for when
+  # building as static libraries. Scoped to just these pods rather than a
+  # global `use_modular_headers!`, which also forces gRPC-Core/gRPC-C++ to
+  # modularize and breaks their module map resolution.
+  pod 'FirebaseAuthInterop', :modular_headers => true
+  pod 'FirebaseAppCheckInterop', :modular_headers => true
+  pod 'GoogleUtilities', :modular_headers => true
+  pod 'RecaptchaInterop', :modular_headers => true
+  pod 'FirebaseFirestoreInternal', :modular_headers => true
 
   post_install do |installer|
     react_native_post_install(
@@ -39,5 +61,25 @@ target 'TaskManagementApp' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # Maps each Xcode build configuration to its react-native-config env file. Only takes effect
+    # once the Debug-Dev/Release-Dev/Debug-Staging/etc. configurations exist in the project (see
+    # ENVIRONMENTS.md) — until then these configuration names simply don't match anything and this
+    # is a no-op, so it's safe to leave in place.
+    envfiles = {
+      'Debug-Dev' => '$(SRCROOT)/../.env.development',
+      'Release-Dev' => '$(SRCROOT)/../.env.development',
+      'Debug-Staging' => '$(SRCROOT)/../.env.staging',
+      'Release-Staging' => '$(SRCROOT)/../.env.staging',
+      'Debug-Prod' => '$(SRCROOT)/../.env.production',
+      'Release-Prod' => '$(SRCROOT)/../.env.production',
+    }
+    installer.pods_project.targets.each do |target|
+      next unless target.name == 'react-native-config'
+      target.build_configurations.each do |build_config|
+        envfile = envfiles[build_config.name]
+        build_config.build_settings['ENVFILE'] = envfile if envfile
+      end
+    end
   end
 end

@@ -1,12 +1,12 @@
 import React, { useState, useCallback, useMemo, memo } from "react";
-import { View, Button, TextInput, StyleSheet, Alert, Text, Pressable } from "react-native";
-import { login } from "../../services/auth.service";
+import { View, TextInput, StyleSheet, Alert, Text, Pressable } from "react-native";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { setUser } from "../../store/slices/auth.slice";
+import { loginThunk } from "../../store/slices/auth.slice";
 import { selectThemeMode } from "../../store/slices/theme.slice";
 import { getTheme } from "../../config/theme";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import ThemedButton from "../components/ThemedButton";
 
 type AuthStackNavigationProp = NativeStackNavigationProp<any>;
 
@@ -29,10 +29,9 @@ const LoginScreen = memo(function LoginScreen() {
 
     try {
       setLoading(true);
-      const res = await login(email.trim(), password);
-      dispatch(setUser(res.user));
+      await dispatch(loginThunk({ email: email.trim(), password })).unwrap();
     } catch (error: any) {
-      Alert.alert("Login failed", error.message || "Invalid credentials");
+      Alert.alert("Login failed", error?.message || "Invalid credentials");
     } finally {
       setLoading(false);
     }
@@ -45,7 +44,7 @@ const LoginScreen = memo(function LoginScreen() {
   return (
     <View style={dynamicStyles.container}>
       <Text style={dynamicStyles.title}>Task Manager</Text>
-      
+
       <TextInput
         placeholder="Email"
         placeholderTextColor={theme.textSecondary}
@@ -66,11 +65,11 @@ const LoginScreen = memo(function LoginScreen() {
         editable={!loading}
       />
 
-      <Button
+      <ThemedButton
         title={loading ? "Logging in..." : "Login"}
         onPress={onLogin}
         disabled={loading}
-        color={theme.primary}
+        variant="primary"
       />
 
       <View style={dynamicStyles.signupLinkContainer}>
